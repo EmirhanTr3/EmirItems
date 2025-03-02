@@ -2,5 +2,5 @@ name: EmirItems
 version: '1.0.0'
 main: xyz.emirdev.emiritems.EmirItems
 loader: xyz.emirdev.emiritems.EmirItemsPluginLoader
-api-version: '1.21'
+api-version: '1.21.4'
 authors: [ EmirhanTr3 ]

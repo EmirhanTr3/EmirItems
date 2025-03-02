@@ -56,19 +56,19 @@
     <dependency>
       <groupId>io.papermc.paper</groupId>
       <artifactId>paper-api</artifactId>
-      <version>1.21.1-R0.1-SNAPSHOT</version>
+      <version>1.21.4-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.github.revxrsal</groupId>
       <artifactId>lamp.common</artifactId>
-      <version>4.0.0-rc.2</version>
+      <version>4.0.0-rc.9</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.github.revxrsal</groupId>
       <artifactId>lamp.bukkit</artifactId>
-      <version>4.0.0-rc.2</version>
+      <version>4.0.0-rc.9</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

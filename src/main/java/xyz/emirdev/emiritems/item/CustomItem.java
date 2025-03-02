@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -30,11 +31,12 @@ public class CustomItem {
     private List<Component> description = new ArrayList<>();
     private String rarity;
     private Component rarityText;
-    private String itemModel;
+    private NamespacedKey model;
     private Map<Enchantment, Integer> enchantments = new HashMap<>();
     private boolean unbreakable = false;
     private Integer maxStackSize = null;
     private Integer maxDamage = null;
+    private List<ItemFlag> flags = new ArrayList<>();
 
     public CustomItem(String itemId, Material material) {
         this.itemId = itemId;
@@ -77,12 +79,12 @@ public class CustomItem {
         return this;
     }
 
-    public String itemModel() {
-        return this.itemModel;
+    public NamespacedKey model() {
+        return this.model;
     }
 
-    public CustomItem itemModel(String itemModel) {
-        this.itemModel = itemModel;
+    public CustomItem model(String model) {
+        this.model = NamespacedKey.fromString(model);
         return this;
     }
 
@@ -130,6 +132,15 @@ public class CustomItem {
         return this;
     }
 
+    public List<ItemFlag> flags() {
+        return this.flags;
+    }
+
+    public CustomItem flags(List<String> flags) {
+        this.flags = flags.stream().map(ItemFlag::valueOf).toList();
+        return this;
+    }
+
     public ItemStack build() {
         if (material == null || name == null || rarity == null) {
             throw new NullPointerException(Utils.stringFormat(
@@ -138,10 +149,14 @@ public class CustomItem {
                     material == null ? "Material" : name == null ? "Name" : "Rarity"
             ));
         }
+
         ItemStack item = ItemStack.of(material);
         ItemMeta meta = item.getItemMeta();
         meta.itemName(name);
         meta.setUnbreakable(unbreakable);
+
+        if (model != null) meta.setItemModel(model);
+
         if (maxStackSize != null) meta.setMaxStackSize(maxStackSize);
         if (meta.hasMaxStackSize() && meta.getMaxStackSize() == 1 && maxDamage != null) {
             Damageable damageable = (Damageable) meta;
@@ -157,9 +172,57 @@ public class CustomItem {
         lore.add(rarityText);
         meta.lore(lore.stream().map(line -> line.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE)).toList());
 
-        meta.getPersistentDataContainer().set(ITEM_TAG, PersistentDataType.STRING, itemId);
+        if (!flags.isEmpty()) meta.addItemFlags(flags.toArray(ItemFlag[]::new));
 
+        meta.getPersistentDataContainer().set(ITEM_TAG, PersistentDataType.STRING, itemId);
         item.setItemMeta(meta);
         return item;
+    }
+
+    public CustomItem(String itemId, Map<String, Object> data) {
+        if (data.get("material") == null || data.get("name") == null || data.get("rarity") == null) {
+            throw new NullPointerException(Utils.stringFormat(
+                    "{1} was not found while loading item {0}.",
+                    itemId,
+                    data.get("material") == null ? "Material" : data.get("name") == null ? "Name" : "Rarity"
+            ));
+        }
+
+        this.itemId = itemId;
+        this.material = Material.valueOf((String) data.get("material"));
+        name(Utils.format((String) data.get("name")));
+        rarity((String) data.get("rarity"));
+        if (data.get("model") != null) model((String) data.get("model"));
+        unbreakable(data.get("unbreakable") != null && (boolean) data.get("unbreakable"));
+
+        if (data.get("description") != null) description(((List<String>) data.get("description")).stream().map(Utils::format).toList());
+        if (data.get("enchantments") != null) enchantments((Map<String, Integer>) data.get("enchantments"));
+        if (data.get("max_stack_size") != null) maxStackSize((int) data.get("max_stack_size"));
+        if (data.get("max_damage") != null) maxDamage((int) data.get("max_damage"));
+        if (data.get("flags") != null) flags((List<String>) data.get("flags"));
+    }
+
+    public Map<String, Object> deserialize() {
+        Map<String, Object> data = new HashMap<>();
+
+        data.put("material", material().toString());
+        data.put("name", Utils.unformat(name()));
+        data.put("description", description().stream().map(Utils::unformat).toList());
+        data.put("rarity", rarity());
+        if (model() != null) data.put("model", model());
+        if (!enchantments().isEmpty()) {
+            Map<String, Integer> enchantments = new HashMap<>();
+            for (Map.Entry<Enchantment, Integer> enchantmentEntry : enchantments().entrySet()) {
+                enchantments.put(enchantmentEntry.getKey().key().asString(), enchantmentEntry.getValue());
+            }
+
+            data.put("enchantments", enchantments);
+        }
+        data.put("unbreakable", unbreakable());
+        if (maxStackSize() != null) data.put("max_stack_size", maxStackSize());
+        if (maxDamage() != null) data.put("max_damage", maxDamage());
+        if (!flags().isEmpty()) data.put("flags", flags().stream().map(ItemFlag::toString).toList());
+
+        return data;
     }
 }

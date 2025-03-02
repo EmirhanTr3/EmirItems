@@ -20,7 +20,12 @@ public class Utils {
         for (int i = 0; i < args.length; i++) {
             string = string.replaceFirst(
                     "\\{"+ i + "}",
-                    Objects.requireNonNullElse(args[i], "null").toString()
+                    Objects.requireNonNullElse(
+                                    args[i],
+                                    "null"
+                            )
+                            .toString()
+                            .replaceAll("([$\\\\])", "\\$1")
             );
         }
         return string;
